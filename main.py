@@ -9,7 +9,7 @@ username = os.getenv("GITHUB_USERNAME")
 token = os.getenv("GITHUB_TOKEN")
 
 
-def has_committed_today():
+def get_today_commit_count():
     url = f"https://api.github.com/users/{username}/events"
 
     headers = {
@@ -21,11 +21,13 @@ def has_committed_today():
 
     if response.status_code != 200:
         print("Failed to get GitHub activity")
-        return False
+        return 0
 
     events = response.json()
 
     today = datetime.now(timezone.utc).date()
+
+    commit_count = 0
 
     for event in events:
         if event["type"] == "PushEvent":
@@ -34,10 +36,9 @@ def has_committed_today():
             ).date()
 
             if event_date == today:
-                return True
+                commit_count += len(event["payload"]["commits"])
 
-    return False
-
+    return commit_count
 
 def send_telegram_message(message):
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -59,10 +60,21 @@ def send_telegram_message(message):
         print(response.text)
 
 
-if has_committed_today():
-    print("✅ You have committed today!")
+
+commit_count = get_today_commit_count()
+
+if commit_count > 0:
+
+    print(f"✅ You have made {commit_count} commits today!")
+
+    send_telegram_message(
+        f"✅ GitHub Update\n\n"
+        f"You have made {commit_count} commits today. 🔥"
+    )
+
 else:
-    print("❌ You have NOT committed today!")
+
+    print("❌ You haven't committed today.")
 
     send_telegram_message(
         "⚠️ You haven't committed to GitHub today!\n\n"
