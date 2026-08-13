@@ -36,7 +36,8 @@ def get_today_commit_count():
             ).date()
 
             if event_date == today:
-                commit_count += len(event["payload"]["commits"])
+                commits = event["payload"].get("commits", [])
+                commit_count += len(commits)
 
     return commit_count
 
