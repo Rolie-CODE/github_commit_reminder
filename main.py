@@ -1,5 +1,4 @@
 import os
-import time
 import requests
 from datetime import datetime, timezone
 from dotenv import load_dotenv
@@ -57,25 +56,15 @@ def send_telegram_message(message):
         print("📱 Telegram reminder sent!")
     else:
         print("❌ Failed to send Telegram message")
+        print(response.text)
 
 
-while True:
+if has_committed_today():
+    print("✅ You have committed today!")
+else:
+    print("❌ You have NOT committed today!")
 
-    if has_committed_today():
-
-        print("✅ You have committed today!")
-        print("Reminder system stopped.")
-
-        break
-
-    else:
-
-        print("❌ No commit today.")
-
-        send_telegram_message(
-            "⚠️ You haven't committed to GitHub today!\n\n"
-            "Go commit something. 💻🔥\n\n"
-            "I'll remind you again in 30 minutes."
-        )
-
-        time.sleep(30 * 60)
+    send_telegram_message(
+        "⚠️ You haven't committed to GitHub today!\n\n"
+        "Go commit something. 💻🔥"
+    )
