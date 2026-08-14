@@ -3,10 +3,12 @@ name: GitHub Commit Reminder
 on:
   schedule:
     - cron: "*/30 * * * *"
+    - cron: "0 23 * * *"
   workflow_dispatch:
 
 jobs:
   check-commit:
+    if: github.event.schedule != '0 23 * * *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
@@ -28,3 +30,29 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py
+
+  daily-summary:
+    # GitHub Actions schedules use UTC; 23:00 UTC is 11:00 PM in Accra (GMT).
+    if: github.event.schedule == '0 23 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Send daily GitHub summary
+        env:
+          GITHUB_USERNAME: ${{ secrets.MY_GITHUB_USERNAME }}
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SUMMARY_TIMEZONE: Africa/Accra
+        run: python main.py --summary
